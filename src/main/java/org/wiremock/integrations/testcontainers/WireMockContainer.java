@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,7 +56,7 @@ public class WireMockContainer extends GenericContainer<WireMockContainer> {
             .withMethod("GET")
             .forStatusCode(200);
     private static final int PORT = 8080;
-    private final StringBuilder wireMockArgs;
+    private final List<String> wireMockArgs = new LinkedList<>();
     private final Map<String, Stub> mappingStubs = new HashMap<>();
     private final Map<String, MountableFile> mappingFiles = new HashMap<>();
     private final Map<String, Extension> extensions = new HashMap<>();
@@ -71,7 +72,6 @@ public class WireMockContainer extends GenericContainer<WireMockContainer> {
 
     public WireMockContainer(String image, String version) {
         super(image + ":" + version);
-        wireMockArgs = new StringBuilder();
         setWaitStrategy(DEFAULT_WAITER);
     }
 
@@ -100,7 +100,7 @@ public class WireMockContainer extends GenericContainer<WireMockContainer> {
      */
     public WireMockContainer withCliArg(String arg) {
         //TODO: Switch to framework with proper CLI escaping
-        wireMockArgs.append(' ').append(arg);
+        wireMockArgs.add(arg);
         return this;
     }
 
@@ -234,16 +234,16 @@ public class WireMockContainer extends GenericContainer<WireMockContainer> {
             }
         }
         if (!extensionClassNames.isEmpty()) {
-            wireMockArgs.append(" --extensions ");
-            wireMockArgs.append(String.join(",", extensionClassNames));
+            wireMockArgs.add("--extensions");
+            wireMockArgs.add(String.join(",", extensionClassNames));
         }
 
         if (isBannerDisabled) {
-            this.withCliArg("--disable-banner");
+            wireMockArgs.add("--disable-banner");
         }
 
         // Add CLI arguments
-        withCommand(wireMockArgs.toString());
+        withCommand(wireMockArgs.toArray(new String[0]));
     }
 
     private static final class Stub {
